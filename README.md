@@ -1,6 +1,6 @@
   # Machine Learning - Grenzen und Möglichkeiten von Deep Reinforcement Learning am Beispiel "Vier Gewinnt"
 
-Dieses Repository enthält den vollständigen praktischen Teil, der im Rahmen meiner Facharbeit im Fach Informatik (Q1/2026) entwickelt wurde. Ziel des Projekts war es einen DDQN DRL Agenten für den Spieleklassiker "Vier Gewinnt" zu entwickeln und anhand von diesem die Grenzen und Möglichkeiten von Reinforcement Learning aufzuzeigen. 
+Dieses Repository enthält den vollständigen praktischen Teil, der im Rahmen meiner [mit 15 Notenpunkten bewerteten](https://github.com/jonathan-dersthof/deep_learning_vier_gewinnt/blob/main/Facharbeit/Bewertungsbogen%20Facharbeit.pdf) Facharbeit im Fach Informatik (Q1/2026) entwickelt wurde. Ziel des Projekts war es einen DDQN DRL Agenten für den Spieleklassiker "Vier Gewinnt" zu entwickeln und anhand von diesem die Grenzen und Möglichkeiten von Reinforcement Learning aufzuzeigen. 
 ***
   - Technische Eigenschaften
   
