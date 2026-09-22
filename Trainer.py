@@ -199,7 +199,7 @@ class Trainer:
         self.setup_trainer()
 
         new_directory: str = f"{self.directory}/{self.setup_training("self_play", agent_a)}"
-        self.setup_training("self_play", agent_b, "b")
+        self.setup_training("self_play", agent_b, "biases")
 
         training_session: Session = Session(new_directory, episodes, agent_a, agent_b = agent_b)
         training_session.run()

@@ -4,7 +4,7 @@ class VierGewinnt:
     """ VierGewinnt ist die Lernumgebung bzw. das eigentliche Spiel mit der gesamten Logik """
     def __init__(self):
         self.board : numpy.ndarray = numpy.zeros((6, 7))
-        self.current_player : int = numpy.random.choice([-1, 1])
+        self.current_player : int = int(numpy.random.choice([-1, 1]))
         self.done : bool = False
         self.outcome : str | None = None
         self.players : dict = {
@@ -15,7 +15,7 @@ class VierGewinnt:
     def reset(self):
         """ Setzt alle Werte der Umgebung zurück auf Standard """
         self.board = numpy.zeros((6, 7))
-        self.current_player = numpy.random.choice([-1, 1])
+        self.current_player = int(numpy.random.choice([-1, 1]))
         self.done = False
         self.outcome = None
 
@@ -26,7 +26,7 @@ class VierGewinnt:
     def get_state_str(self) -> str:
         """ Gibt Spielfeld visualisiert als String aus """
         players : dict = {
-            numpy.float64(1.0): " X ",
+            numpy.float64(1.0): " input_data ",
             numpy.float64(-1.0): " O ",
             numpy.float64(0.0): " . "
         }

@@ -97,7 +97,7 @@ class Training:
                 agent_b : Agent = select_agent()
 
                 print("Hyperparameter für Agent B:")
-                hyperparameters_b: dict = self.get_hyperparameters("b")
+                hyperparameters_b: dict = self.get_hyperparameters("biases")
 
                 self.trainer.self_play(episodes, agent_a = agent_a, agent_b = agent_b, **hyperparameters, **hyperparameters_b)
             case "league_play":
