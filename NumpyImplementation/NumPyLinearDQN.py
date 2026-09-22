@@ -1,5 +1,5 @@
-from NumPyReLU import ReLU
-from NumPyLinearLayer import Linear
+from .NumPyReLU import ReLU
+from .NumPyLinearLayer import Linear
 
 
 class LinearDQN:

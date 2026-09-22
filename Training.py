@@ -104,7 +104,7 @@ class Training:
                 agent_a : Agent = select_agent()
                 self.trainer.league_play(episodes, agent_a, None, **hyperparameters)
             case "full_training":
-                cycles : int = select_value("Anzahl an Trainingswiederholungen (cycles) festlegen: ", value_type = "int")
+                cycles : int = int(select_value("Anzahl an Trainingswiederholungen (cycles) festlegen: ", value_type = "int"))
                 self.trainer.full_training(episodes, cycles, **hyperparameters)
 
 if __name__ == "__main__":

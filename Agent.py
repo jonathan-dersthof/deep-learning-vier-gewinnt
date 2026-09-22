@@ -1,12 +1,11 @@
-import torch
-import torch.nn as nn
-import torch.optim as optim
 import random
 import numpy
+import pickle
+
+import NumpyImplementation as npImp
 
 from VierGewinnt import VierGewinnt
 from collections import deque
-from LinearDQN import LinearDQN
 
 
 class Agent:
@@ -37,17 +36,28 @@ class Agent:
         self.learning_rate : float = learning_rate
         self.batch_size : int = batch_size
 
-        self.model : nn.Module = LinearDQN(hidden_size)
-        self.target_model : nn.Module = LinearDQN(hidden_size)
-        self.target_model.load_state_dict(self.model.state_dict())
-        self.target_model.eval()
+        # PyTorch durch NumPy ersetzt. Input = 42 (6x7 Feld), Output = 7 (Spalten)
+        self.model : npImp.LinearDQN = npImp.LinearDQN(
+            input_size = 42,
+            output_size = 7,
+            hidden_size = hidden_size,
+            hidden_layers=  2
+        )
+        self.target_model : npImp.LinearDQN = npImp.LinearDQN(
+            input_size = 42,
+            output_size = 7,
+            hidden_size = hidden_size,
+            hidden_layers = 2
+        )
+        self.update_target_network()
 
         # Schrittweite in welcher target_model aktualisiert wird
         self.update_step : int= 1000
         self.steps : int = 0
 
-        self.optimizer : optim.Adam = optim.Adam(self.model.parameters(), lr=self.learning_rate)
-        self.criterion : nn.SmoothL1Loss = nn.SmoothL1Loss()
+        # NumPy Optimizer und Loss
+        self.optimizer : npImp.Adam = npImp.Adam(learning_rate = self.learning_rate)
+        self.criterion : npImp.MSELoss = npImp.MSELoss()
 
         self.win_reward : float = winner_reward
         self.draw_reward : float = draw_reward
@@ -93,6 +103,13 @@ class Agent:
         """ Fügt der Erinnerung des Agenten einen weiteren Datensatz hinzu. """
         self.memory.append((state, action, reward, next_state, done))
 
+    def update_target_network(self):
+        """ Kopiert die Gewichte vom Policy-Netzwerk in das Target-Netzwerk """
+        for target_layer, policy_layer in zip(self.target_model.layers, self.model.layers):
+            if hasattr(target_layer, 'weights'):
+                target_layer.weights = policy_layer.weights.copy()
+                target_layer.biases = policy_layer.biases.copy()
+
     def act(self, env : VierGewinnt) -> int:
         """ Die Methode wählt den nächsten Zug aus einer Liste an legalen Zügen auf dem Brett aus. """
         state : numpy.ndarray = env.get_state()
@@ -111,12 +128,10 @@ class Agent:
         if numpy.random.rand() <= self.epsilon:
             return random.choice(valid_moves)
 
-        state_t : torch.Tensor = torch.FloatTensor(state).unsqueeze(0)
+        state_flat = state.flatten()[numpy.newaxis, :]
 
-        with torch.no_grad():
-            act_values = self.model(state_t)
-
-        q_values : list[float] = act_values[0].cpu().numpy().copy()
+        act_values = self.model.forward(state_flat)
+        q_values = act_values[0].copy()
 
         # illegale Züge erhalten einen Q-Wert in der negativen Unendlichkeit, da in Randerscheinungen im Training trotz einem vorher gewählten sehr niedrigen Wert illegale Züge gewählt wurden
         for column in range(7):
@@ -147,26 +162,37 @@ class Agent:
 
         minibatch : list[tuple] = random.sample(self.memory, self.batch_size)
 
-        states : torch.Tensor = torch.FloatTensor(numpy.array([x[0] for x in minibatch]))
-        actions : torch.Tensor = torch.LongTensor([x[1] for x in minibatch])
-        rewards : torch.Tensor = torch.FloatTensor([x[2] for x in minibatch])
-        next_states : torch.Tensor = torch.FloatTensor(numpy.array([x[3] for x in minibatch]))
-        dones : torch.Tensor = torch.FloatTensor([x[4] for x in minibatch])
+        states = numpy.array([x[0].flatten() for x in minibatch], dtype = numpy.float32)
+        actions = numpy.array([x[1] for x in minibatch], dtype = numpy.int32)
+        rewards = numpy.array([x[2] for x in minibatch], dtype = numpy.float32)
+        next_states = numpy.array([x[3].flatten() for x in minibatch], dtype = numpy.float32)
+        dones = numpy.array([x[4] for x in minibatch], dtype = numpy.float32)
 
-        current_q_values : torch.Tensor = self.model(states).gather(1, actions.unsqueeze(1))
+        current_q_values = self.model.forward(states)
 
-        with torch.no_grad():
-            next_actions : torch.Tensor = self.model(next_states).argmax(1)
-            max_next_q_values : torch.Tensor = self.target_model(next_states).gather(1, next_actions.unsqueeze(1)).squeeze()
-            target_q_values : torch.Tensor = rewards + (self.gamma * max_next_q_values * (1 - dones))
+        next_q_values = self.model.forward(next_states)
+        next_actions = numpy.argmax(next_q_values, axis=1)
 
-        loss : torch.Tensor = self.criterion(current_q_values.squeeze(), target_q_values)
+        # Q-Wert dieser Aktion mit dem Target-Modell bewerten
+        target_next_q_values = self.target_model.forward(next_states)
+        batch_indices = numpy.arange(self.batch_size)
+        max_next_q_values = target_next_q_values[batch_indices, next_actions]
 
-        self.optimizer.zero_grad()
-        loss.backward()
-        torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0)
+        # Bellman-Gleichung
+        updated_q_values = rewards + (self.gamma * max_next_q_values * (1 - dones))
 
-        self.optimizer.step()
+        targets = current_q_values.copy()
+        targets[batch_indices, actions] = updated_q_values
+
+        self.current_loss = self.criterion.forward(current_q_values, targets)
+        d_output = self.criterion.backward()
+
+        # 5. Gradient Clipping (ersetzt torch.nn.utils.clip_grad_norm_)
+        # Verhindert explodierende Gradienten durch Kappung auf Werte zwischen -1 und 1
+        d_output = numpy.clip(d_output, -1.0, 1.0)
+
+        self.model.backward(d_output)
+        self.optimizer.step(self.model)
 
         if self.epsilon > self.epsilon_min:
             self.epsilon *= self.epsilon_decay
@@ -174,19 +200,17 @@ class Agent:
         self.steps += 1
 
         if self.steps % self.update_step == 0:
-           self.target_model.load_state_dict(self.model.state_dict())
+            self.update_target_network()
 
-        self.current_loss : float = loss.item()
-
-    """ nur model weights werden gespeichert/geladen, nicht ganzer Agent """
-    def save_model(self, path : str):
-        """ Speichert die Model-Weights"""
-        torch.save(self.model.state_dict(), path)
+    def save_model(self, path: str):
+        """ Speichert das gesamte NumPy-Modell mittels Pickle """
+        with open(path, 'wb') as f:
+            pickle.dump(self.model, f)
         print(f"Modell gespeichert unter {path}")
 
-    def load_model(self, path : str):
-        """ Lädt und evaluiert die Model-Weights"""
-        self.model.load_state_dict(torch.load(path))
-        self.target_model.load_state_dict(self.model.state_dict())
-        self.model.eval()
+    def load_model(self, path: str):
+        """ Lädt das NumPy-Modell und synchronisiert das Target-Modell """
+        with open(path, 'rb') as f:
+            self.model = pickle.load(f)
+        self.update_target_network()
         print(f"Modell aus '{path}' geladen.")

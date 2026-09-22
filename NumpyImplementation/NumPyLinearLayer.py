@@ -6,7 +6,7 @@ def he_init(x, input_size):
 
 class Linear:
     def __init__(self, input_size : int, output_size : int):
-        self.weights = he_init(np.random.randn(input_size, output_size))
+        self.weights = he_init(np.random.randn(input_size, output_size), input_size)
         self.biases = np.zeros((1, output_size))
 
         self.input_data = None
