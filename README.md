@@ -1,6 +1,6 @@
   # Machine Learning - Grenzen und Möglichkeiten von Deep Reinforcement Learning am Beispiel "Vier Gewinnt"
 
-In diesem Branch wurde zu Übungszwecken der gesamte Code so umstrukturiert, dass alle PyTorch Funktionalitäten durch eigene NumPy Implementationen ersetzt wurden. Abgesehen vom Adam Optimizer sind alle Klassen vollkommen eigenständig implementiert worden. 
+In diesem Branch wurde zu Übungszwecken der gesamte Code des [Hauptprojekts](https://github.com/jonathan-dersthof/deep-learning-vier-gewinnt/tree/main) so umstrukturiert, dass alle PyTorch Funktionalitäten durch eigene NumPy Implementationen ersetzt wurden. Abgesehen vom Adam Optimizer sind alle Klassen vollkommen eigenständig implementiert worden. 
 ***
   - Technische Eigenschaften
   
