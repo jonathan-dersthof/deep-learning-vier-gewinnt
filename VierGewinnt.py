@@ -26,7 +26,7 @@ class VierGewinnt:
     def get_state_str(self) -> str:
         """ Gibt Spielfeld visualisiert als String aus """
         players : dict = {
-            numpy.float64(1.0): " input_data ",
+            numpy.float64(1.0): " X ",
             numpy.float64(-1.0): " O ",
             numpy.float64(0.0): " . "
         }

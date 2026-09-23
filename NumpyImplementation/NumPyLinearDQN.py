@@ -18,6 +18,7 @@ class LinearDQN:
             for layer in range(hidden_layers - 1):
                 if hidden_layers - 1 - layer > 0:
                     self.layers.append(Linear(hidden_size, hidden_size))
+                    self.layers.append(ReLU())
 
             self.layers.append(Linear(hidden_size, output_size))
         else:

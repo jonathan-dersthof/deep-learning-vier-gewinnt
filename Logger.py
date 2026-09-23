@@ -203,7 +203,7 @@ class Logger:
 
         if data_frame is None:
             columns = ["Episode", "Reward", "Epsilon", "Loss", "WinRate"]
-            if name == "biases":
+            if name == "b":
                 data_frame = pandas.DataFrame(self.log_data_b, columns=columns)
             else:
                 data_frame = pandas.DataFrame(self.log_data_a, columns=columns)
@@ -284,6 +284,6 @@ if __name__ == "__main__":
     #logger.plot(data_a, "a")
 
     data_b = pandas.read_csv("training/trainer_34/self_play_model/training_log_b.csv")
-    #logger.plot(data_b, "biases")
+    #logger.plot(data_b, "b")
 
     logger.plot_comparison(data_a, data_b)
